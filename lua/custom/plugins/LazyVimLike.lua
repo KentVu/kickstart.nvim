@@ -1,0 +1,16 @@
+-- All things that depends on LazyVim.
+require("lazyvim.config")--.setup(opts)
+local folderOfThisFile = (...):match("(.-)[^%.]+$")
+return {
+  -- Can use the LazyVim global here!
+  {
+    'nvim-telescope/telescope.nvim',
+    keys = {
+      { "<leader>/", LazyVim.telescope("live_grep"), desc = "Grep (Root Dir)" },
+      { "<leader><space>", LazyVim.telescope("files"), desc = "Find Files (Root Dir)" },
+      { "<leader>ff", LazyVim.telescope("files"), desc = "Find Files (Root Dir)" },
+    },
+  },
+  require(folderOfThisFile .. 'lsp')
+  -- require('custom.plugins.lsp')
+}

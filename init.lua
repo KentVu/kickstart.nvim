@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -204,6 +204,10 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
+-- My own configs in another module.
+require('config').setup({})
+--require('config')
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -277,10 +281,11 @@ require('lazy').setup({
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     config = function() -- This is the function that runs, AFTER loading
-      require('which-key').setup()
+      local wk = require("which-key")
+      wk.setup()
 
       -- Document existing key chains
-      require('which-key').register {
+      wk.register {
         ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
         ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
         ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
@@ -290,9 +295,25 @@ require('lazy').setup({
         ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
       }
       -- visual mode
-      require('which-key').register({
+      wk.register({
         ['<leader>h'] = { 'Git [H]unk' },
       }, { mode = 'v' })
+      wk.register({
+        mode = { "n", "v" },
+        ["g"] = { name = "+goto" },
+        ["z"] = { name = "+fold" },
+        ["]"] = { name = "+next" },
+        ["["] = { name = "+prev" },
+        ["<leader><tab>"] = { name = "+tabs" },
+        ["<leader>b"] = { name = "+buffer" },
+        ["<leader>c"] = { name = "+code" },
+        ["<leader>f"] = { name = "+file/find" },
+        ["<leader>g"] = { name = "+git" },
+        ["<leader>gh"] = { name = "+hunks" },
+        ["<leader>q"] = { name = "+quit/session" },
+        ["<leader>u"] = { name = "+ui" },
+        ["<leader>x"] = { name = "+diagnostics/quickfix" },
+      })
     end,
   },
 
@@ -349,15 +370,40 @@ require('lazy').setup({
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
+      local actions = require("telescope.actions")
+      local function flash(prompt_bufnr)
+        require("flash").jump({
+          pattern = "^",
+          label = { after = { 0, 0 } },
+          search = {
+            mode = "search",
+            exclude = {
+              function(win)
+                return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= "TelescopeResults"
+              end,
+            },
+          },
+          action = function(match)
+            local picker = require("telescope.actions.state").get_current_picker(prompt_bufnr)
+            picker:set_selection(match.pos[1] - 1)
+          end,
+        })
+      end
       require('telescope').setup {
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
+        defaults = {
+          path_display = { "truncate" }, -- "shorten"
+          mappings = {
+            -- i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+            i = {
+               ["<c-s>"] = flash ,
+              ["<M-Up>"] = actions.cycle_history_prev,
+              ["<M-Down>"] = actions.cycle_history_next,
+            },
+          },
+        },
         -- pickers = {}
         extensions = {
           ['ui-select'] = {
@@ -372,6 +418,7 @@ require('lazy').setup({
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
+      -- Keymaps define here will not take advantage of telescope-all-recent
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
       vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
@@ -380,8 +427,6 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -608,7 +653,7 @@ require('lazy').setup({
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
       })
-      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+      -- require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
         handlers = {
@@ -622,6 +667,10 @@ require('lazy').setup({
           end,
         },
       }
+      -- Don't usr mason, I'll add my own..
+      local lspconfig = require("lspconfig")
+      local configs = require("lspconfig.configs")
+      lspconfig.taplo.setup {}
     end,
   },
 
@@ -810,7 +859,17 @@ require('lazy').setup({
       -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
-      require('mini.surround').setup()
+      -- Change to ys since s is reserved for flash! (custom/plugins)
+      require('mini.surround').setup({
+        mappings = {
+          add = "ys",
+          delete = "ds",
+          replace = "cs",
+        },
+      })
+      -- Remap adding surrounding to Visual mode selection
+      vim.keymap.del('x', 'ys')
+      vim.keymap.set("x", "S", [[:<C-u>lua require('mini.surround').add('visual')<CR>]], { silent = true })
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
@@ -874,18 +933,18 @@ require('lazy').setup({
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
