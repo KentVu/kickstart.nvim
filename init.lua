@@ -205,7 +205,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 })
 
 -- My own configs in another module.
-require('config').setup({})
+require('config').setup {}
 --require('config')
 
 -- [[ Install `lazy.nvim` plugin manager ]]
@@ -281,7 +281,7 @@ require('lazy').setup({
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     config = function() -- This is the function that runs, AFTER loading
-      local wk = require("which-key")
+      local wk = require 'which-key'
       wk.setup()
 
       -- Document existing key chains
@@ -298,22 +298,22 @@ require('lazy').setup({
       wk.register({
         ['<leader>h'] = { 'Git [H]unk' },
       }, { mode = 'v' })
-      wk.register({
-        mode = { "n", "v" },
-        ["g"] = { name = "+goto" },
-        ["z"] = { name = "+fold" },
-        ["]"] = { name = "+next" },
-        ["["] = { name = "+prev" },
-        ["<leader><tab>"] = { name = "+tabs" },
-        ["<leader>b"] = { name = "+buffer" },
-        ["<leader>c"] = { name = "+code" },
-        ["<leader>f"] = { name = "+file/find" },
-        ["<leader>g"] = { name = "+git" },
-        ["<leader>gh"] = { name = "+hunks" },
-        ["<leader>q"] = { name = "+quit/session" },
-        ["<leader>u"] = { name = "+ui" },
-        ["<leader>x"] = { name = "+diagnostics/quickfix" },
-      })
+      wk.register {
+        mode = { 'n', 'v' },
+        ['g'] = { name = '+goto' },
+        ['z'] = { name = '+fold' },
+        [']'] = { name = '+next' },
+        ['['] = { name = '+prev' },
+        ['<leader><tab>'] = { name = '+tabs' },
+        ['<leader>b'] = { name = '+buffer' },
+        ['<leader>c'] = { name = '+code' },
+        ['<leader>f'] = { name = '+file/find' },
+        ['<leader>g'] = { name = '+git' },
+        ['<leader>gh'] = { name = '+hunks' },
+        ['<leader>q'] = { name = '+quit/session' },
+        ['<leader>u'] = { name = '+ui' },
+        ['<leader>x'] = { name = '+diagnostics/quickfix' },
+      }
     end,
   },
 
@@ -370,37 +370,37 @@ require('lazy').setup({
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
-      local actions = require("telescope.actions")
+      local actions = require 'telescope.actions'
       local function flash(prompt_bufnr)
-        require("flash").jump({
-          pattern = "^",
+        require('flash').jump {
+          pattern = '^',
           label = { after = { 0, 0 } },
           search = {
-            mode = "search",
+            mode = 'search',
             exclude = {
               function(win)
-                return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= "TelescopeResults"
+                return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= 'TelescopeResults'
               end,
             },
           },
           action = function(match)
-            local picker = require("telescope.actions.state").get_current_picker(prompt_bufnr)
+            local picker = require('telescope.actions.state').get_current_picker(prompt_bufnr)
             picker:set_selection(match.pos[1] - 1)
           end,
-        })
+        }
       end
       require('telescope').setup {
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
-          path_display = { "truncate" }, -- "shorten"
+          path_display = { 'truncate' }, -- "shorten"
           mappings = {
             -- i = { ['<c-enter>'] = 'to_fuzzy_refine' },
             i = {
-               ["<c-s>"] = flash ,
-              ["<M-Up>"] = actions.cycle_history_prev,
-              ["<M-Down>"] = actions.cycle_history_next,
+              ['<c-s>'] = flash,
+              ['<M-Up>'] = actions.cycle_history_prev,
+              ['<M-Down>'] = actions.cycle_history_next,
             },
           },
         },
@@ -423,6 +423,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
       vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
+      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
@@ -667,9 +668,9 @@ require('lazy').setup({
           end,
         },
       }
-      -- Don't usr mason, I'll add my own..
-      local lspconfig = require("lspconfig")
-      local configs = require("lspconfig.configs")
+      -- Don't use mason, I'll add my own..
+      local lspconfig = require 'lspconfig'
+      local configs = require 'lspconfig.configs'
       lspconfig.taplo.setup {}
     end,
   },
@@ -679,7 +680,7 @@ require('lazy').setup({
     lazy = false,
     keys = {
       {
-        '<leader>f',
+        '<leader>cf',
         function()
           require('conform').format { async = true, lsp_fallback = true }
         end,
@@ -852,7 +853,28 @@ require('lazy').setup({
       --  - va)  - [V]isually select [A]round [)]paren
       --  - yinq - [Y]ank [I]nside [N]ext [']quote
       --  - ci'  - [C]hange [I]nside [']quote
-      require('mini.ai').setup { n_lines = 500 }
+      local ai = require 'mini.ai'
+      ai.setup {
+        n_lines = 500,
+        -- custom_textobjects = {
+        --   o = ai.gen_spec.treesitter { -- code block
+        --     a = { '@block.outer', '@conditional.outer', '@loop.outer' },
+        --     i = { '@block.inner', '@conditional.inner', '@loop.inner' },
+        --   },
+        --   f = ai.gen_spec.treesitter { a = '@function.outer', i = '@function.inner' }, -- function
+        --   c = ai.gen_spec.treesitter { a = '@class.outer', i = '@class.inner' }, -- class
+        --   t = { '<([%p%w]-)%f[^<%w][^<>]->.-</%1>', '^<.->().*()</[^/]->$' }, -- tags
+        --   d = { '%f[%d]%d+' }, -- digits
+        --   e = { -- Word with case
+        --     { '%u[%l%d]+%f[^%l%d]', '%f[%S][%l%d]+%f[^%l%d]', '%f[%P][%l%d]+%f[^%l%d]', '^[%l%d]+%f[^%l%d]' },
+        --     '^().*()$',
+        --   },
+        --   -- i = LazyVim.mini.ai_indent, -- indent
+        --   -- g = LazyVim.mini.ai_buffer, -- buffer
+        --   u = ai.gen_spec.function_call(), -- u for "Usage"
+        --   U = ai.gen_spec.function_call { name_pattern = '[%w_]' }, -- without dot in function name
+        -- },
+      }
 
       -- Add/delete/replace surroundings (brackets, quotes, etc.)
       --
@@ -860,16 +882,16 @@ require('lazy').setup({
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       -- Change to ys since s is reserved for flash! (custom/plugins)
-      require('mini.surround').setup({
+      require('mini.surround').setup {
         mappings = {
-          add = "ys",
-          delete = "ds",
-          replace = "cs",
+          add = 'ys',
+          delete = 'ds',
+          replace = 'cs',
         },
-      })
+      }
       -- Remap adding surrounding to Visual mode selection
       vim.keymap.del('x', 'ys')
-      vim.keymap.set("x", "S", [[:<C-u>lua require('mini.surround').add('visual')<CR>]], { silent = true })
+      vim.keymap.set('x', 'S', [[:<C-u>lua require('mini.surround').add('visual')<CR>]], { silent = true })
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
