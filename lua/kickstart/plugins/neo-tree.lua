@@ -12,6 +12,13 @@ return {
   cmd = 'Neotree',
   keys = {
       { "\\", "<cmd>Neotree toggle reveal<CR>", desc = "Toggle Neotree", mode = { "n" }, noremap = true },
+      {
+        "<leader>fe",
+        function()
+          require("neo-tree.command").execute({ toggle = true, dir = LazyVim.root() })
+        end,
+        desc = "Explorer NeoTree (Root Dir)",
+      },
   },
   opts = {
     filesystem = {
